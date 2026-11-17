@@ -1,0 +1,14 @@
+{
+  "name": "Nico Finanzas",
+  "short_name": "Nico Finanzas",
+  "description": "Control personal de ingresos, gastos, ahorros y presupuestos.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4f6fa",
+  "theme_color": "#101827",
+  "lang": "es-CO",
+  "icons": [
+    {"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}
+  ]
+}

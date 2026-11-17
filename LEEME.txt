@@ -1,0 +1,25 @@
+NICO FINANZAS — primera versión PWA
+
+CONTENIDO
+- index.html: interfaz de la aplicación.
+- app.js: lógica y almacenamiento local.
+- manifest.webmanifest: configuración instalable.
+- sw.js: caché básica para uso sin conexión.
+- icon.svg: icono.
+
+CÓMO PROBARLA
+1. Descomprime la carpeta.
+2. Para probarla en un computador, sirve la carpeta con un servidor local (por ejemplo: `python -m http.server 8000`) y abre http://localhost:8000.
+3. Para instalarla en iPhone, primero publícala en un hosting HTTPS (por ejemplo, GitHub Pages, Netlify o tu propio servidor).
+4. En Safari del iPhone abre la URL publicada, toca Compartir y luego “Añadir a pantalla de inicio”.
+
+DATOS Y PRIVACIDAD
+- Los datos se guardan en localStorage del navegador de ese dispositivo.
+- No hay cuenta, sincronización en la nube ni conexión bancaria.
+- Si borras los datos del sitio o cambias de dispositivo, puedes perder los registros. Usa “Copia JSON” con frecuencia.
+- La exportación CSV usa separador punto y coma y codificación UTF-8 BOM para abrirse en Excel.
+- Los gastos recurrentes son recordatorios; no generan transacciones ni descuentan saldo automáticamente.
+- Los saldos de las cuentas se actualizan al registrar/editar/eliminar movimientos asociados.
+
+IMPORTANTE
+Esta es una primera versión personal, no una aplicación bancaria certificada. No almacenes claves bancarias ni datos sensibles en notas.
