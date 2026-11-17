@@ -1,7 +1,7 @@
 {
-  "name": "Nico Finanzas",
-  "short_name": "Nico Finanzas",
-  "description": "Control personal de ingresos, gastos, ahorros y presupuestos.",
+  "name": "Finanzas",
+  "short_name": "Finanzas",
+  "description": "Controla ingresos, gastos, suscripciones, ahorros y presupuestos.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

@@ -1,4 +1,4 @@
-NICO FINANZAS — primera versión PWA
+FINANZAS — versión 1.1 PWA
 
 CONTENIDO
 - index.html: interfaz de la aplicación.
@@ -23,3 +23,15 @@ DATOS Y PRIVACIDAD
 
 IMPORTANTE
 Esta es una primera versión personal, no una aplicación bancaria certificada. No almacenes claves bancarias ni datos sensibles en notas.
+
+SUSCRIPCIONES
+- Permite registrar servicios, precio, frecuencia, próxima fecha, cuenta y estado.
+- Los logotipos de esta versión son distintivos gráficos con iniciales y colores de marca; no dependen de imágenes externas.
+- “Registrar pago” crea un egreso y avanza la próxima fecha de cobro. No realiza cobros bancarios automáticos.
+
+ACTUALIZACIÓN DE SUSCRIPCIONES
+- Selector visual de plataformas con identificadores de marca.
+- Calendario para elegir el día de cobro del 1 al 31.
+- Vista previa de la próxima fecha de cobro.
+- Al registrar el pago se crea un egreso y se calcula el siguiente cobro.
+- Si el mes no tiene el día elegido (por ejemplo, día 31 en febrero), se usa el último día de ese mes.
