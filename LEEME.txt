@@ -27,3 +27,11 @@ INSTALACIÓN
 2. Sube y reemplaza los archivos en la raíz de tu repositorio GitHub.
 3. Haz Commit changes.
 4. Abre la PWA y actualízala. El service worker cambió de versión para forzar la renovación de archivos.
+
+
+VERSIÓN 1.4 — CATEGORÍAS PERSONALIZADAS
+- Crea categorías desde los selectores de movimientos, presupuestos y gastos recurrentes.
+- Asigna un emoji identificador.
+- Administra y elimina categorías personalizadas desde Más > Mis categorías.
+- Las categorías eliminadas se quitan de las opciones futuras; los movimientos anteriores conservan el nombre guardado.
+- Las categorías se guardan en el mismo almacenamiento local existente.
