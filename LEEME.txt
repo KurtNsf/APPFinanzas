@@ -35,3 +35,15 @@ VERSIÓN 1.4 — CATEGORÍAS PERSONALIZADAS
 - Administra y elimina categorías personalizadas desde Más > Mis categorías.
 - Las categorías eliminadas se quitan de las opciones futuras; los movimientos anteriores conservan el nombre guardado.
 - Las categorías se guardan en el mismo almacenamiento local existente.
+
+
+VERSIÓN 1.5 — PLATAFORMAS Y ADMINISTRACIÓN DE REGISTROS
+- Se retiraron del catálogo inicial de suscripciones las plataformas de citas y OnlyFans.
+- Se añadieron ChatGPT, Gemini, Plan de datos, Claro, Movistar y Tigo.
+- Las suscripciones existentes guardadas no se borran; el cambio afecta las opciones para nuevas suscripciones.
+- Ahora puedes editar y eliminar deudas y préstamos.
+- Ahora puedes editar y eliminar gastos recurrentes.
+- Ahora puedes editar cuentas y medios de pago.
+- Una cuenta solo se puede eliminar si no está vinculada a movimientos ni suscripciones, para proteger el historial.
+- El saldo editado de una cuenta reemplaza el saldo actual calculado. Si hay movimientos previos, revisa el saldo antes de guardarlo.
+- Se actualizó la versión de caché del service worker para que el navegador descargue los archivos nuevos.
