@@ -64,11 +64,12 @@
     <section class="page active" id="page-home">
       <div class="welcome"><div><h2>Hola, vamos con tus finanzas</h2><div class="muted" id="todayLabel"></div></div><span class="pill">COP · Colombia</span></div>
       <div class="grid">
-        <div class="card balance"><div class="muted">Balance total en tus cuentas</div><div class="balance-value" id="totalBalance">$0</div><div class="balance-foot"><div><div class="muted">Ingresos del mes</div><strong id="monthIncome">$0</strong></div><div><div class="muted">Gastos del mes</div><strong id="monthExpense">$0</strong></div></div></div>
+        <div class="card balance"><div class="muted">Saldo disponible (sin tarjetas de crédito)</div><div class="balance-value" id="totalBalance">$0</div><div class="balance-foot"><div><div class="muted">Ingresos del mes</div><strong id="monthIncome">$0</strong></div><div><div class="muted">Gastos del mes</div><strong id="monthExpense">$0</strong></div></div></div>
         <div class="card stat"><div class="stat-icon">↗</div><div class="eyebrow">Ingresos</div><strong class="positive" id="incomeStat">$0</strong><div class="sub">Este mes</div></div>
         <div class="card stat"><div class="stat-icon">↘</div><div class="eyebrow">Egresos</div><strong class="negative" id="expenseStat">$0</strong><div class="sub">Este mes</div></div>
         <div class="card wide"><div class="section-head"><h3>Flujo de dinero</h3><small>Últimos 6 meses</small></div><div class="chart-wrap"><canvas id="flowChart"></canvas></div></div>
         <div class="card side"><div class="section-head"><h3>Gastos por categoría</h3><small>Este mes</small></div><div id="categoryChart"></div></div>
+        <div class="card full"><div class="section-head"><h3>Próximos pagos · 7 días</h3><small>Suscripciones y gastos programados</small></div><div id="upcomingList"></div></div>
         <div class="card wide"><div class="section-head"><h3>Movimientos recientes</h3><button class="ghost small-btn" data-goto="transactions">Ver todos</button></div><div id="recentList"></div></div>
         <div class="card side"><div class="section-head"><h3>Presupuestos</h3><button class="ghost small-btn" data-goto="budgets">Ver</button></div><div id="budgetPreview"></div></div>
       </div>
@@ -76,7 +77,7 @@
 
     <section class="page" id="page-transactions">
       <div class="page-title"><h2>Movimientos</h2><p>Todo lo que entra y sale de tu dinero.</p></div>
-      <div class="toolbar"><input id="searchTx" placeholder="Buscar movimiento…"><select id="filterType"><option value="all">Todos</option><option value="income">Ingresos</option><option value="expense">Egresos</option></select><button class="primary" id="addTx">+ Registrar</button></div>
+      <div class="toolbar"><input id="searchTx" placeholder="Buscar movimiento…"><select id="filterType"><option value="all">Todos</option><option value="income">Ingresos</option><option value="expense">Egresos</option><option value="transfer">Transferencias</option></select><button class="primary" id="addTx">+ Registrar</button></div>
       <div class="card"><div id="transactionList"></div></div>
     </section>
 
@@ -103,10 +104,10 @@
     <section class="page" id="page-more">
       <div class="page-title"><h2>Más herramientas</h2><p>Organiza tus cuentas, compromisos y reportes.</p></div>
       <div class="grid">
-        <div class="card half"><div class="section-head"><h3>Mis cuentas</h3><button class="primary small-btn" id="addAccount">+ Añadir</button></div><div id="accountList"></div></div>
+        <div class="card half"><div class="section-head"><h3>Mis cuentas y tarjetas</h3><button class="primary small-btn" id="addAccount">+ Añadir</button></div><div id="accountList"></div></div>
         <div class="card half"><div class="section-head"><h3>Deudas y préstamos</h3><button class="primary small-btn" id="addDebt">+ Añadir</button></div><div id="debtList"></div></div>
         <div class="card half"><div class="section-head"><h3>Gastos recurrentes</h3><button class="primary small-btn" id="addRecurring">+ Añadir</button></div><div id="recurringList"></div><p class="sub">Los recurrentes quedan programados como recordatorio; no descuentan dinero automáticamente.</p></div>
-        <div class="card half"><div class="section-head"><h3>Datos y respaldo</h3></div><p class="muted" style="font-size:13px">Descarga tus movimientos en CSV compatible con Excel o guarda una copia JSON de todos tus datos.</p><div class="toolbar"><button class="ghost" id="exportCsv">Exportar Excel/CSV</button><button class="ghost" id="backupBtn">Copia JSON</button><label class="ghost" style="cursor:pointer">Restaurar copia<input id="restoreFile" type="file" accept=".json,application/json" hidden></label></div><button class="ghost danger" id="resetBtn">Borrar todos mis datos</button></div>
+        <div class="card half"><div class="section-head"><h3>Datos y respaldo</h3></div><p class="muted" style="font-size:13px">Descarga tus movimientos en CSV o guarda una copia JSON de todos tus datos. Recomendación: guarda una copia periódica en iCloud Drive o Archivos.</p><div class="toolbar"><button class="ghost" id="exportCsv">Exportar Excel/CSV</button><button class="ghost" id="backupBtn">Copia JSON</button><label class="ghost" style="cursor:pointer">Restaurar copia<input id="restoreFile" type="file" accept=".json,application/json" hidden></label></div><button class="ghost danger" id="resetBtn">Borrar todos mis datos</button></div>
       </div>
     </section>
   </main>

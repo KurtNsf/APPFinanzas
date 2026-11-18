@@ -1,37 +1,29 @@
-FINANZAS — versión 1.1 PWA
+FINANZAS — versión 1.3
 
-CONTENIDO
-- index.html: interfaz de la aplicación.
-- app.js: lógica y almacenamiento local.
-- manifest.webmanifest: configuración instalable.
-- sw.js: caché básica para uso sin conexión.
-- icon.svg: icono.
+NOVEDADES
+- Cuentas y medios de pago: efectivo, cuentas bancarias, billeteras digitales, tarjetas débito y tarjetas de crédito.
+- Movimientos con cuenta de origen.
+- Transferencias entre cuentas propias, incluyendo pagos de tarjeta de crédito.
+- Calendario de próximos 7 días con suscripciones y gastos recurrentes.
+- Los gastos recurrentes ahora permiten indicar un día de cobro.
+- Exportación CSV con cuenta de origen y destino.
 
-CÓMO PROBARLA
-1. Descomprime la carpeta.
-2. Para probarla en un computador, sirve la carpeta con un servidor local (por ejemplo: `python -m http.server 8000`) y abre http://localhost:8000.
-3. Para instalarla en iPhone, primero publícala en un hosting HTTPS (por ejemplo, GitHub Pages, Netlify o tu propio servidor).
-4. En Safari del iPhone abre la URL publicada, toca Compartir y luego “Añadir a pantalla de inicio”.
+REGLAS DE SALDOS
+- En efectivo, bancos, billeteras y tarjetas débito, los egresos reducen el saldo y los ingresos lo aumentan.
+- En tarjetas de crédito, las compras aumentan la deuda utilizada y los pagos la reducen.
+- Las transferencias mueven dinero entre cuentas y no cuentan como ingreso ni egreso.
+- El balance principal suma saldos de cuentas no crediticias; la deuda de tarjetas se muestra por separado en la lista de cuentas.
 
-DATOS Y PRIVACIDAD
-- Los datos se guardan en localStorage del navegador de ese dispositivo.
-- No hay cuenta, sincronización en la nube ni conexión bancaria.
-- Si borras los datos del sitio o cambias de dispositivo, puedes perder los registros. Usa “Copia JSON” con frecuencia.
-- La exportación CSV usa separador punto y coma y codificación UTF-8 BOM para abrirse en Excel.
-- Los gastos recurrentes son recordatorios; no generan transacciones ni descuentan saldo automáticamente.
-- Los saldos de las cuentas se actualizan al registrar/editar/eliminar movimientos asociados.
+RESPALDO Y PRIVACIDAD
+- Los datos se guardan en el almacenamiento local del navegador.
+- Actualizar la aplicación en la misma dirección normalmente conserva los datos; borrar los datos del sitio, usar otro navegador o cambiar de dispositivo puede hacer que no estén disponibles.
+- Usa “Copia JSON” periódicamente y guarda el archivo en iCloud Drive, Archivos u otro lugar seguro.
+- Para recuperar los datos, usa “Restaurar copia”.
+- La copia JSON contiene información financiera personal: guárdala en un lugar privado.
+- Todavía no hay sincronización en la nube ni inicio de sesión.
 
-IMPORTANTE
-Esta es una primera versión personal, no una aplicación bancaria certificada. No almacenes claves bancarias ni datos sensibles en notas.
-
-SUSCRIPCIONES
-- Permite registrar servicios, precio, frecuencia, próxima fecha, cuenta y estado.
-- Los logotipos de esta versión son distintivos gráficos con iniciales y colores de marca; no dependen de imágenes externas.
-- “Registrar pago” crea un egreso y avanza la próxima fecha de cobro. No realiza cobros bancarios automáticos.
-
-ACTUALIZACIÓN DE SUSCRIPCIONES
-- Selector visual de plataformas con identificadores de marca.
-- Calendario para elegir el día de cobro del 1 al 31.
-- Vista previa de la próxima fecha de cobro.
-- Al registrar el pago se crea un egreso y se calcula el siguiente cobro.
-- Si el mes no tiene el día elegido (por ejemplo, día 31 en febrero), se usa el último día de ese mes.
+INSTALACIÓN
+1. Descomprime el ZIP.
+2. Sube y reemplaza los archivos en la raíz de tu repositorio GitHub.
+3. Haz Commit changes.
+4. Abre la PWA y actualízala. El service worker cambió de versión para forzar la renovación de archivos.
