@@ -47,3 +47,7 @@ VERSIÓN 1.5 — PLATAFORMAS Y ADMINISTRACIÓN DE REGISTROS
 - Una cuenta solo se puede eliminar si no está vinculada a movimientos ni suscripciones, para proteger el historial.
 - El saldo editado de una cuenta reemplaza el saldo actual calculado. Si hay movimientos previos, revisa el saldo antes de guardarlo.
 - Se actualizó la versión de caché del service worker para que el navegador descargue los archivos nuevos.
+
+
+VERSION 1.6.1 - CORRECCION AUTH
+Se corrigió la inicialización de Supabase Auth: la versión 1.6 definía initializeAuth(), pero no la ejecutaba. Esta versión sí la inicializa al cargar la aplicación. También se actualizó el nombre de caché del Service Worker para evitar que el navegador conserve el JavaScript anterior.

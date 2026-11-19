@@ -185,3 +185,5 @@ function render(){applyTheme();renderHome();renderTransactions();renderBudgets()
 window.addEventListener('resize',()=>{if($('#page-home').classList.contains('active'))drawFlow()});
 if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 render();
+// Inicializar Auth: en la versión anterior la función estaba definida, pero nunca se ejecutaba.
+initializeAuth().catch(error=>{console.error('Error inicializando Supabase Auth:',error);const status=$('#authStatus');if(status)status.textContent='No se pudo iniciar la conexión con Supabase. Revisa la URL, la clave pública y la conexión a internet.';});
