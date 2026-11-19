@@ -9,7 +9,7 @@ const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_QxnpE_-fLfHrYoBWKqghtw_7cUQBoyY
 const supabaseClient = window.supabase?.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
 });
-let currentUser = null, cloudTimer = null, cloudBusy = false, cloudDirty = false, authMode = 'login';
+let currentUser = null, cloudTimer = null, cloudBusy = false, cloudDirty = false, cloudVersion = null, authMode = 'login';
 const categories = ['Alimentación','Transporte','Vivienda','Servicios','Salud','Educación','Entretenimiento','Compras','Mascotas','Deudas','Ahorro','Salario','Ventas','Otros'];
 const icons = {'Alimentación':'🍽️','Transporte':'🚗','Vivienda':'🏠','Servicios':'💡','Salud':'🩺','Educación':'📚','Entretenimiento':'🎬','Compras':'🛍️','Mascotas':'🐾','Deudas':'💳','Ahorro':'🎯','Salario':'💼','Ventas':'🧾','Otros':'📌'};
 const defaultData = () => ({transactions:[],accounts:[{id:'cash',name:'Efectivo',type:'Efectivo',balance:0}],budgets:[],goals:[],debts:[],recurring:[],subscriptions:[],theme:'light'});
@@ -30,13 +30,27 @@ async function syncToCloud(){
     do{
       cloudDirty=false;
       const snapshot=JSON.parse(JSON.stringify(data));
-      const {data:result,error}=await supabaseClient.rpc('sync_finanzas_data',{p_data:snapshot});
+      const {data:result,error}=await supabaseClient.rpc('sync_finanzas_data',{
+        p_data:snapshot,
+        p_expected_updated_at:cloudVersion
+      });
       if(error)throw error;
       if(!result?.ok)throw new Error('Supabase no confirmó la sincronización relacional.');
-      setAuthStatus('Sincronizado en tablas individuales · '+new Date(result.synced_at||Date.now()).toLocaleTimeString('es-CO'));
+      cloudVersion=result.sync_version||result.synced_at||cloudVersion;
+      setAuthStatus('Sincronizado · '+new Date(result.synced_at||Date.now()).toLocaleTimeString('es-CO'));
       if(JSON.stringify(snapshot)!==JSON.stringify(data))cloudDirty=true;
     }while(cloudDirty&&currentUser);
-  }catch(e){console.error('Error sincronizando Finanzas:',e);setAuthStatus('Error al sincronizar: '+(e.message||'Comprueba las funciones SQL y los permisos.'));toast('No se pudo sincronizar. La copia local se conserva.');}
+  }catch(e){
+    console.error('Error sincronizando Finanzas:',e);
+    const message=e.message||'Comprueba las funciones SQL y los permisos.';
+    if(message.includes('SYNC_CONFLICT')){
+      setAuthStatus('Conflicto: hay cambios más recientes en otro dispositivo. Cierra sesión y vuelve a entrar para recuperar la versión más reciente.');
+      toast('Conflicto de sincronización. Tu copia local se conserva.');
+    }else{
+      setAuthStatus('Error al sincronizar: '+message);
+      toast('No se pudo sincronizar. La copia local se conserva.');
+    }
+  }
   finally{cloudBusy=false;}
 }
 function openAuth(){ $('#authModal').classList.add('show'); setAuthStatus(currentUser?'Sesión activa: '+currentUser.email:''); $('#authLogout').hidden=!currentUser; $('#authForm').hidden=!!currentUser; $('#authReset').hidden=!!currentUser; $('#authSignup').hidden=!!currentUser; $('#authSubmit').hidden=!!currentUser; $('#authTitle').textContent=currentUser?'Cuenta conectada':'Tu cuenta de Finanzas'; $('#authSubtitle').textContent=currentUser?'Tus datos están vinculados a esta cuenta.':'Regístrate o inicia sesión para sincronizar tus finanzas.' }
@@ -60,6 +74,8 @@ async function activateUser(user){
     // Primero intentamos recuperar desde las tablas relacionales.
     const {data:relational,error:relError}=await supabaseClient.rpc('get_finanzas_data');
     if(relError)throw relError;
+    cloudVersion=relational?._syncVersion||null;
+    if(relational&&Object.prototype.hasOwnProperty.call(relational,'_syncVersion'))delete relational._syncVersion;
     const relationalHasData=relational&&Array.isArray(relational.transactions)&&(
       relational.transactions.length||relational.accounts?.length>1||relational.budgets?.length||
       relational.goals?.length||relational.debts?.length||relational.recurring?.length||
@@ -70,8 +86,9 @@ async function activateUser(user){
       localStorage.setItem(localDataKey(),JSON.stringify(data));
     }else{
       // Primera migración: conservar lo que ya estaba en app_data.
-      const {data:profile,error}=await supabaseClient.from('profiles').select('app_data').eq('id',user.id).single();
+      const {data:profile,error}=await supabaseClient.from('profiles').select('app_data,updated_at').eq('id',user.id).single();
       if(error)throw error;
+      cloudVersion=profile?.updated_at||cloudVersion;
       const cloud=profile?.app_data;
       if(cloud&&typeof cloud==='object'&&Array.isArray(cloud.transactions)&&hasUsefulData(cloud)){
         data=cloud;localStorage.setItem(localDataKey(),JSON.stringify(data));
@@ -101,9 +118,9 @@ async function initializeAuth(){
   $('#authForm').onsubmit=async e=>{e.preventDefault();await handleAuth(authMode)};
   $('#authSignup').onclick=()=>{authMode=authMode==='login'?'signup':'login';$('#authSubmit').textContent=authMode==='signup'?'Crear cuenta':'Iniciar sesión';$('#authSignup').textContent=authMode==='signup'?'Volver a iniciar sesión':'Crear cuenta';$('#authNameField').hidden=authMode!=='signup';setAuthStatus(authMode==='signup'?'Puedes indicar tu nombre para mostrarlo en tu cuenta.':'');};
   $('#authReset').onclick=async()=>{const email=$('#authEmail').value.trim();if(!email){setAuthStatus('Escribe primero tu correo.');return}const {error}=await supabaseClient.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});setAuthStatus(error?error.message:'Te enviamos instrucciones si el correo está registrado.')};
-  $('#authLogout').onclick=async()=>{await syncToCloud();const {error}=await supabaseClient.auth.signOut();if(error){setAuthStatus('No se pudo cerrar sesión: '+error.message);return}currentUser=null;try{data=JSON.parse(localStorage.getItem('nico-finanzas-v1'))||defaultData()}catch{data=defaultData()}$('#authOpen').textContent='Iniciar sesión';$('#authOpen').title='';$('#authModal').classList.remove('show');render()};
+  $('#authLogout').onclick=async()=>{await syncToCloud();const {error}=await supabaseClient.auth.signOut();if(error){setAuthStatus('No se pudo cerrar sesión: '+error.message);return}currentUser=null;cloudVersion=null;try{data=JSON.parse(localStorage.getItem('nico-finanzas-v1'))||defaultData()}catch{data=defaultData()}$('#authOpen').textContent='Iniciar sesión';$('#authOpen').title='';$('#authModal').classList.remove('show');render()};
   const {data:{session},error}=await supabaseClient.auth.getSession();if(error)throw error;if(session?.user)await activateUser(session.user);
-  supabaseClient.auth.onAuthStateChange(async(event,session)=>{if(event==='SIGNED_IN'&&session?.user&&!currentUser)await activateUser(session.user);if(event==='SIGNED_OUT'&&currentUser){currentUser=null;$('#authOpen').textContent='Iniciar sesión';}});
+  supabaseClient.auth.onAuthStateChange(async(event,session)=>{if(event==='SIGNED_IN'&&session?.user&&!currentUser)await activateUser(session.user);if(event==='SIGNED_OUT'&&currentUser){currentUser=null;cloudVersion=null;$('#authOpen').textContent='Iniciar sesión';}});
 }
 function toast(msg){const el=$('#toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2400)}
 function monthTx(){return data.transactions.filter(t=>monthKey(t.date)===monthKey())}

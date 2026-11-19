@@ -69,3 +69,13 @@ VERSION 1.7.0 - MIGRACION A TABLAS INDIVIDUALES
 - profiles.app_data se conserva como copia de compatibilidad durante la transición.
 - Incluye MIGRACION_TABLAS_INDIVIDUALES.sql: debe ejecutarse una vez en Supabase antes de publicar esta versión.
 - Si falla el RPC, la aplicación muestra el error y conserva la copia local.
+
+
+VERSION 1.7.1 - SINCRONIZACION INCREMENTAL
+- Reemplaza el borrado y reinsercion completa por UPSERT de registros y eliminacion solo de IDs ausentes del estado local.
+- Agrega control optimista de version por perfil para detectar cambios concurrentes entre dispositivos.
+- Si hay conflicto, conserva la copia local y pide volver a iniciar sesion para recuperar la version remota.
+- Requiere ejecutar SYNC_INCREMENTAL_V1_7_1.sql una vez antes de publicar.
+- La funcion exige que todas las colecciones esten presentes para impedir borrados accidentales por payloads parciales.
+- Las fotografias de saldos y los lotes de archivo no se modifican; las cuentas ligadas a snapshots se conservan.
+- profiles.app_data sigue guardando una copia de compatibilidad.
