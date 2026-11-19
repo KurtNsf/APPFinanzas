@@ -30,14 +30,13 @@ async function syncToCloud(){
     do{
       cloudDirty=false;
       const snapshot=JSON.parse(JSON.stringify(data));
-      const payload={id:currentUser.id,display_name:currentUser.user_metadata?.display_name||currentUser.email?.split('@')[0]||'',currency:'COP',theme:snapshot.theme||'light',app_data:snapshot,updated_at:new Date().toISOString()};
-      const {data:rows,error}=await supabaseClient.from('profiles').upsert(payload,{onConflict:'id'}).select('id,updated_at');
+      const {data:result,error}=await supabaseClient.rpc('sync_finanzas_data',{p_data:snapshot});
       if(error)throw error;
-      if(!rows||rows.length!==1)throw new Error('Supabase no confirmó la actualización del perfil. Revisa las políticas RLS de profiles.');
-      setAuthStatus('Sincronizado con Supabase · '+new Date(rows[0].updated_at).toLocaleTimeString('es-CO'));
+      if(!result?.ok)throw new Error('Supabase no confirmó la sincronización relacional.');
+      setAuthStatus('Sincronizado en tablas individuales · '+new Date(result.synced_at||Date.now()).toLocaleTimeString('es-CO'));
       if(JSON.stringify(snapshot)!==JSON.stringify(data))cloudDirty=true;
     }while(cloudDirty&&currentUser);
-  }catch(e){console.error('Error sincronizando Finanzas:',e);setAuthStatus('Error al sincronizar: '+(e.message||'Comprueba la conexión y las políticas RLS.'));toast('No se pudo sincronizar. Tus datos siguen guardados en este dispositivo.');}
+  }catch(e){console.error('Error sincronizando Finanzas:',e);setAuthStatus('Error al sincronizar: '+(e.message||'Comprueba las funciones SQL y los permisos.'));toast('No se pudo sincronizar. La copia local se conserva.');}
   finally{cloudBusy=false;}
 }
 function openAuth(){ $('#authModal').classList.add('show'); setAuthStatus(currentUser?'Sesión activa: '+currentUser.email:''); $('#authLogout').hidden=!currentUser; $('#authForm').hidden=!!currentUser; $('#authReset').hidden=!!currentUser; $('#authSignup').hidden=!!currentUser; $('#authSubmit').hidden=!!currentUser; $('#authTitle').textContent=currentUser?'Cuenta conectada':'Tu cuenta de Finanzas'; $('#authSubtitle').textContent=currentUser?'Tus datos están vinculados a esta cuenta.':'Regístrate o inicia sesión para sincronizar tus finanzas.' }
@@ -54,27 +53,45 @@ async function handleAuth(mode){
 }
 async function activateUser(user){
   currentUser=user;
+  displayUser(user);
   try{
     const anonymous=JSON.parse(localStorage.getItem('nico-finanzas-v1')||'null');
     const userLocal=JSON.parse(localStorage.getItem('nico-finanzas-user-'+user.id)||'null');
-    const {data:profile,error}=await supabaseClient.from('profiles').select('app_data').eq('id',user.id).single();
-    if(error)throw error;
-    const cloud=profile?.app_data;
-    if(cloud&&typeof cloud==='object'&&Array.isArray(cloud.transactions)){
-      data=cloud;localStorage.setItem(localDataKey(),JSON.stringify(data));setAuthStatus('Datos descargados desde tu cuenta.');
-    }else if(hasUsefulData(userLocal)){
-      data=userLocal;await syncToCloud();setAuthStatus('Datos locales de esta cuenta recuperados y enviados a la nube.');
-    }else if(hasUsefulData(anonymous)){
-      if(confirm('Encontramos datos guardados en este dispositivo. ¿Quieres copiarlos a tu nueva cuenta? Esto no borrará la copia local.')){
-        data=anonymous;localStorage.setItem(localDataKey(),JSON.stringify(data));await syncToCloud();
+    // Primero intentamos recuperar desde las tablas relacionales.
+    const {data:relational,error:relError}=await supabaseClient.rpc('get_finanzas_data');
+    if(relError)throw relError;
+    const relationalHasData=relational&&Array.isArray(relational.transactions)&&(
+      relational.transactions.length||relational.accounts?.length>1||relational.budgets?.length||
+      relational.goals?.length||relational.debts?.length||relational.recurring?.length||
+      relational.subscriptions?.length||relational.customCategories?.length);
+    if(relationalHasData){
+      data=relational;
+      setAuthStatus('Datos recuperados desde tus tablas individuales.');
+      localStorage.setItem(localDataKey(),JSON.stringify(data));
+    }else{
+      // Primera migración: conservar lo que ya estaba en app_data.
+      const {data:profile,error}=await supabaseClient.from('profiles').select('app_data').eq('id',user.id).single();
+      if(error)throw error;
+      const cloud=profile?.app_data;
+      if(cloud&&typeof cloud==='object'&&Array.isArray(cloud.transactions)&&hasUsefulData(cloud)){
+        data=cloud;localStorage.setItem(localDataKey(),JSON.stringify(data));
+        setAuthStatus('Migrando tus datos anteriores a las tablas individuales…');
+        await syncToCloud();
+      }else if(hasUsefulData(userLocal)){
+        data=userLocal;localStorage.setItem(localDataKey(),JSON.stringify(data));
+        setAuthStatus('Migrando la copia local de tu cuenta…');await syncToCloud();
+      }else if(hasUsefulData(anonymous)){
+        if(confirm('Encontramos datos guardados en este dispositivo. ¿Quieres copiarlos a tu cuenta? La copia local original se conservará.')){
+          data=anonymous;localStorage.setItem(localDataKey(),JSON.stringify(data));await syncToCloud();
+        }else{
+          data=defaultData();localStorage.setItem(localDataKey(),JSON.stringify(data));await syncToCloud();
+        }
       }else{
         data=defaultData();localStorage.setItem(localDataKey(),JSON.stringify(data));await syncToCloud();
       }
-    }else{
-      data=defaultData();localStorage.setItem(localDataKey(),JSON.stringify(data));await syncToCloud();
     }
     displayUser(user);$('#authLogout').hidden=false;applyTheme();render();
-  }catch(e){console.error('Error activando cuenta:',e);setAuthStatus('No se pudo cargar/sincronizar el perfil: '+(e.message||'Error desconocido'));displayUser(user);}
+  }catch(e){console.error('Error activando/migrando cuenta:',e);setAuthStatus('No se pudo cargar la cuenta: '+(e.message||'Error desconocido'));displayUser(user);}
 }
 async function initializeAuth(){
   if(!supabaseClient){$('#authOpen').textContent='Auth no disponible';return}

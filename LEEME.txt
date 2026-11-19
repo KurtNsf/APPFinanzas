@@ -60,3 +60,12 @@ VERSION 1.6.2 - SINCRONIZACION Y CUENTA
 - El botón superior muestra el nombre indicado en el registro o el correo de la sesión.
 - El registro permite indicar un nombre opcional.
 - Se mantiene una copia local por usuario.
+
+
+VERSION 1.7.0 - MIGRACION A TABLAS INDIVIDUALES
+- Sincronización transaccional mediante la función SQL sync_finanzas_data.
+- Recuperación desde get_finanzas_data al iniciar sesión.
+- Los datos se guardan en accounts, transactions, budgets, savings_goals, debts, recurring_expenses, subscriptions y custom_categories.
+- profiles.app_data se conserva como copia de compatibilidad durante la transición.
+- Incluye MIGRACION_TABLAS_INDIVIDUALES.sql: debe ejecutarse una vez en Supabase antes de publicar esta versión.
+- Si falla el RPC, la aplicación muestra el error y conserva la copia local.
