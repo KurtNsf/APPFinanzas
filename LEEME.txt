@@ -1,81 +1,58 @@
-FINANZAS — versión 1.3
+FINANZAS — VERSIÓN 1.8
+SEGURIDAD Y AISLAMIENTO MULTIUSUARIO
 
-NOVEDADES
-- Cuentas y medios de pago: efectivo, cuentas bancarias, billeteras digitales, tarjetas débito y tarjetas de crédito.
-- Movimientos con cuenta de origen.
-- Transferencias entre cuentas propias, incluyendo pagos de tarjeta de crédito.
-- Calendario de próximos 7 días con suscripciones y gastos recurrentes.
-- Los gastos recurrentes ahora permiten indicar un día de cobro.
-- Exportación CSV con cuenta de origen y destino.
+BASE DE PARTIDA
+Esta versión parte de Finanzas 1.7.1. Conserva la autenticación Supabase,
+la sincronización incremental, las tablas individuales y los respaldos locales.
 
-REGLAS DE SALDOS
-- En efectivo, bancos, billeteras y tarjetas débito, los egresos reducen el saldo y los ingresos lo aumentan.
-- En tarjetas de crédito, las compras aumentan la deuda utilizada y los pagos la reducen.
-- Las transferencias mueven dinero entre cuentas y no cuentan como ingreso ni egreso.
-- El balance principal suma saldos de cuentas no crediticias; la deuda de tarjetas se muestra por separado en la lista de cuentas.
+CAMBIOS DE LA VERSIÓN 1.8
+- Endurecimiento de Row Level Security (RLS) para perfiles y tablas financieras.
+- Cada usuario autenticado solo puede leer, insertar, modificar y eliminar filas
+  cuyo id (profiles) o user_id (tablas financieras) coincide con auth.uid().
+- Las políticas RLS anteriores de las tablas indicadas se sustituyen por políticas
+  estrictas de propietario para evitar que políticas permisivas antiguas se combinen.
+- Se habilita RLS en las tablas protegidas. No se fuerza sobre el propietario
+  de tabla para no interferir con el trigger que crea perfiles nuevos.
+- Las funciones get_finanzas_data y sync_finanzas_data quedan ejecutables solo
+  por el rol authenticated, no por anon ni public.
+- Al cambiar de cuenta, la interfaz limpia primero los datos en memoria mientras
+  carga el perfil nuevo para evitar mostrar brevemente datos de la sesión anterior.
+- Al cerrar sesión, la interfaz vuelve a un estado vacío por defecto y no carga
+  automáticamente los datos locales anónimos.
+- La importación de datos locales a una cuenta requiere confirmación explícita
+  y advierte que no se deben importar datos de otra persona en dispositivos compartidos.
+- Si falla la carga de una cuenta, la interfaz no deja visibles los datos de la
+  sesión anterior. Las copias locales por usuario no se eliminan.
 
-RESPALDO Y PRIVACIDAD
-- Los datos se guardan en el almacenamiento local del navegador.
-- Actualizar la aplicación en la misma dirección normalmente conserva los datos; borrar los datos del sitio, usar otro navegador o cambiar de dispositivo puede hacer que no estén disponibles.
-- Usa “Copia JSON” periódicamente y guarda el archivo en iCloud Drive, Archivos u otro lugar seguro.
-- Para recuperar los datos, usa “Restaurar copia”.
-- La copia JSON contiene información financiera personal: guárdala en un lugar privado.
-- Todavía no hay sincronización en la nube ni inicio de sesión.
+ANTES DE PUBLICAR
+1. En Finanzas, exporta una copia JSON y guárdala en un lugar privado.
+2. En Supabase > SQL Editor, abre una consulta nueva.
+3. Ejecuta SEGURIDAD_MULTIUSUARIO_V1_8.sql una sola vez.
+4. Debe terminar con Success. No rows returned.
+5. Ejecuta VERIFICAR_SEGURIDAD_V1_8.sql y revisa que las 12 tablas muestren
+   rls_habilitado = true, rls_forzado = true y cuatro politicas finanzas_owner_*.
+6. Si el SQL falla, NO publiques todavía la versión. La transacción revierte
+   todos sus cambios. Comparte el error para ajustar el script a tu esquema real.
 
-INSTALACIÓN
+PUBLICAR
 1. Descomprime el ZIP.
-2. Sube y reemplaza los archivos en la raíz de tu repositorio GitHub.
-3. Haz Commit changes.
-4. Abre la PWA y actualízala. El service worker cambió de versión para forzar la renovación de archivos.
+2. Sube el contenido de la carpeta finanzas a la raíz del repositorio APPFinanzas.
+3. Reemplaza los archivos anteriores y haz Commit changes.
+4. Espera GitHub Pages y recarga con Ctrl + Shift + R.
 
+PRUEBAS MULTIUSUARIO
+- Usuario A inicia sesión y crea un movimiento de prueba.
+- Usuario B inicia sesión en otro perfil/navegador o dispositivo y confirma que
+  no ve movimientos, cuentas, deudas ni suscripciones del usuario A.
+- Usuario B crea un movimiento y confirma que aparece solo en su propia cuenta.
+- Usuario A vuelve a iniciar sesión y confirma que sus datos siguen intactos.
+- Cerrar sesión debe dejar la interfaz sin los datos privados de la cuenta anterior.
 
-VERSIÓN 1.4 — CATEGORÍAS PERSONALIZADAS
-- Crea categorías desde los selectores de movimientos, presupuestos y gastos recurrentes.
-- Asigna un emoji identificador.
-- Administra y elimina categorías personalizadas desde Más > Mis categorías.
-- Las categorías eliminadas se quitan de las opciones futuras; los movimientos anteriores conservan el nombre guardado.
-- Las categorías se guardan en el mismo almacenamiento local existente.
-
-
-VERSIÓN 1.5 — PLATAFORMAS Y ADMINISTRACIÓN DE REGISTROS
-- Se retiraron del catálogo inicial de suscripciones las plataformas de citas y OnlyFans.
-- Se añadieron ChatGPT, Gemini, Plan de datos, Claro, Movistar y Tigo.
-- Las suscripciones existentes guardadas no se borran; el cambio afecta las opciones para nuevas suscripciones.
-- Ahora puedes editar y eliminar deudas y préstamos.
-- Ahora puedes editar y eliminar gastos recurrentes.
-- Ahora puedes editar cuentas y medios de pago.
-- Una cuenta solo se puede eliminar si no está vinculada a movimientos ni suscripciones, para proteger el historial.
-- El saldo editado de una cuenta reemplaza el saldo actual calculado. Si hay movimientos previos, revisa el saldo antes de guardarlo.
-- Se actualizó la versión de caché del service worker para que el navegador descargue los archivos nuevos.
-
-
-VERSION 1.6.1 - CORRECCION AUTH
-Se corrigió la inicialización de Supabase Auth: la versión 1.6 definía initializeAuth(), pero no la ejecutaba. Esta versión sí la inicializa al cargar la aplicación. También se actualizó el nombre de caché del Service Worker para evitar que el navegador conserve el JavaScript anterior.
-
-
-VERSION 1.6.2 - SINCRONIZACION Y CUENTA
-- Se reforzó la escritura en Supabase usando upsert y confirmación de fila actualizada.
-- Se detectan y muestran errores reales de sincronización.
-- Se evita perder cambios cuando hay una sincronización en curso.
-- El botón superior muestra el nombre indicado en el registro o el correo de la sesión.
-- El registro permite indicar un nombre opcional.
-- Se mantiene una copia local por usuario.
-
-
-VERSION 1.7.0 - MIGRACION A TABLAS INDIVIDUALES
-- Sincronización transaccional mediante la función SQL sync_finanzas_data.
-- Recuperación desde get_finanzas_data al iniciar sesión.
-- Los datos se guardan en accounts, transactions, budgets, savings_goals, debts, recurring_expenses, subscriptions y custom_categories.
-- profiles.app_data se conserva como copia de compatibilidad durante la transición.
-- Incluye MIGRACION_TABLAS_INDIVIDUALES.sql: debe ejecutarse una vez en Supabase antes de publicar esta versión.
-- Si falla el RPC, la aplicación muestra el error y conserva la copia local.
-
-
-VERSION 1.7.1 - SINCRONIZACION INCREMENTAL
-- Reemplaza el borrado y reinsercion completa por UPSERT de registros y eliminacion solo de IDs ausentes del estado local.
-- Agrega control optimista de version por perfil para detectar cambios concurrentes entre dispositivos.
-- Si hay conflicto, conserva la copia local y pide volver a iniciar sesion para recuperar la version remota.
-- Requiere ejecutar SYNC_INCREMENTAL_V1_7_1.sql una vez antes de publicar.
-- La funcion exige que todas las colecciones esten presentes para impedir borrados accidentales por payloads parciales.
-- Las fotografias de saldos y los lotes de archivo no se modifican; las cuentas ligadas a snapshots se conservan.
-- profiles.app_data sigue guardando una copia de compatibilidad.
+IMPORTANTE
+- Esta versión no modifica ni elimina filas financieras.
+- No borra profiles.app_data, snapshots ni lotes históricos.
+- El script reemplaza las políticas RLS existentes de las 12 tablas indicadas.
+  Si hay políticas personalizadas adicionales, deben revisarse antes de ejecutar.
+- Las pruebas desde SQL Editor con rol postgres no simulan auth.uid() de un usuario.
+  La validación de aislamiento debe hacerse iniciando sesión con dos cuentas reales.
+- No compartas contraseñas, service_role ni claves secretas.
