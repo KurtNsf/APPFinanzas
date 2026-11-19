@@ -51,3 +51,12 @@ VERSIÓN 1.5 — PLATAFORMAS Y ADMINISTRACIÓN DE REGISTROS
 
 VERSION 1.6.1 - CORRECCION AUTH
 Se corrigió la inicialización de Supabase Auth: la versión 1.6 definía initializeAuth(), pero no la ejecutaba. Esta versión sí la inicializa al cargar la aplicación. También se actualizó el nombre de caché del Service Worker para evitar que el navegador conserve el JavaScript anterior.
+
+
+VERSION 1.6.2 - SINCRONIZACION Y CUENTA
+- Se reforzó la escritura en Supabase usando upsert y confirmación de fila actualizada.
+- Se detectan y muestran errores reales de sincronización.
+- Se evita perder cambios cuando hay una sincronización en curso.
+- El botón superior muestra el nombre indicado en el registro o el correo de la sesión.
+- El registro permite indicar un nombre opcional.
+- Se mantiene una copia local por usuario.

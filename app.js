@@ -6,8 +6,10 @@ const monthKey = d => (d||today()).slice(0,7);
 const uid = () => Math.random().toString(36).slice(2,10);
 const SUPABASE_URL = 'https://daecimtaelilelinhjav.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_QxnpE_-fLfHrYoBWKqghtw_7cUQBoyY';
-const supabaseClient = window.supabase?.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
-let currentUser = null, cloudTimer = null, cloudBusy = false, authMode = 'login';
+const supabaseClient = window.supabase?.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+});
+let currentUser = null, cloudTimer = null, cloudBusy = false, cloudDirty = false, authMode = 'login';
 const categories = ['Alimentación','Transporte','Vivienda','Servicios','Salud','Educación','Entretenimiento','Compras','Mascotas','Deudas','Ahorro','Salario','Ventas','Otros'];
 const icons = {'Alimentación':'🍽️','Transporte':'🚗','Vivienda':'🏠','Servicios':'💡','Salud':'🩺','Educación':'📚','Entretenimiento':'🎬','Compras':'🛍️','Mascotas':'🐾','Deudas':'💳','Ahorro':'🎯','Salario':'💼','Ventas':'🧾','Otros':'📌'};
 const defaultData = () => ({transactions:[],accounts:[{id:'cash',name:'Efectivo',type:'Efectivo',balance:0}],budgets:[],goals:[],debts:[],recurring:[],subscriptions:[],theme:'light'});
@@ -16,13 +18,76 @@ try{data=JSON.parse(localStorage.getItem('nico-finanzas-v1'))||defaultData()}cat
 data.subscriptions ||= []; data.recurring ||= []; data.goals ||= []; data.debts ||= []; data.budgets ||= []; data.accounts ||= []; data.customCategories ||= []; data.customCategoryIcons ||= {};
 function localDataKey(){return currentUser?'nico-finanzas-user-'+currentUser.id:'nico-finanzas-v1'}
 function save(){localStorage.setItem(localDataKey(),JSON.stringify(data));render();if(currentUser)scheduleCloudSave()}
-function scheduleCloudSave(){clearTimeout(cloudTimer);cloudTimer=setTimeout(syncToCloud,900)}
-async function syncToCloud(){if(!currentUser||!supabaseClient||cloudBusy)return;cloudBusy=true;try{const {error}=await supabaseClient.from('profiles').update({app_data:data,updated_at:new Date().toISOString()}).eq('id',currentUser.id);if(error)throw error;setAuthStatus('Sincronizado con tu cuenta.')}catch(e){console.error(e);setAuthStatus('No se pudo sincronizar. Tus cambios siguen guardados en este dispositivo.')}finally{cloudBusy=false}}
+function scheduleCloudSave(){clearTimeout(cloudTimer);cloudTimer=setTimeout(syncToCloud,700)}
 function setAuthStatus(msg){const el=$('#authStatus');if(el)el.textContent=msg}
+function displayUser(user){const label=user?.user_metadata?.display_name?.trim()||user?.email||'Mi cuenta';const btn=$('#authOpen');if(btn){btn.textContent=label;btn.title=user?.email||label;btn.setAttribute('aria-label','Cuenta: '+label)}}
+function hasUsefulData(obj){return !!(obj&&(obj.transactions?.length||obj.accounts?.length>1||obj.budgets?.length||obj.goals?.length||obj.debts?.length||obj.recurring?.length||obj.subscriptions?.length||obj.customCategories?.length))}
+async function syncToCloud(){
+  if(!currentUser||!supabaseClient)return;
+  if(cloudBusy){cloudDirty=true;return;}
+  cloudBusy=true;
+  try{
+    do{
+      cloudDirty=false;
+      const snapshot=JSON.parse(JSON.stringify(data));
+      const payload={id:currentUser.id,display_name:currentUser.user_metadata?.display_name||currentUser.email?.split('@')[0]||'',currency:'COP',theme:snapshot.theme||'light',app_data:snapshot,updated_at:new Date().toISOString()};
+      const {data:rows,error}=await supabaseClient.from('profiles').upsert(payload,{onConflict:'id'}).select('id,updated_at');
+      if(error)throw error;
+      if(!rows||rows.length!==1)throw new Error('Supabase no confirmó la actualización del perfil. Revisa las políticas RLS de profiles.');
+      setAuthStatus('Sincronizado con Supabase · '+new Date(rows[0].updated_at).toLocaleTimeString('es-CO'));
+      if(JSON.stringify(snapshot)!==JSON.stringify(data))cloudDirty=true;
+    }while(cloudDirty&&currentUser);
+  }catch(e){console.error('Error sincronizando Finanzas:',e);setAuthStatus('Error al sincronizar: '+(e.message||'Comprueba la conexión y las políticas RLS.'));toast('No se pudo sincronizar. Tus datos siguen guardados en este dispositivo.');}
+  finally{cloudBusy=false;}
+}
 function openAuth(){ $('#authModal').classList.add('show'); setAuthStatus(currentUser?'Sesión activa: '+currentUser.email:''); $('#authLogout').hidden=!currentUser; $('#authForm').hidden=!!currentUser; $('#authReset').hidden=!!currentUser; $('#authSignup').hidden=!!currentUser; $('#authSubmit').hidden=!!currentUser; $('#authTitle').textContent=currentUser?'Cuenta conectada':'Tu cuenta de Finanzas'; $('#authSubtitle').textContent=currentUser?'Tus datos están vinculados a esta cuenta.':'Regístrate o inicia sesión para sincronizar tus finanzas.' }
-async function handleAuth(mode){const email=$('#authEmail').value.trim(),password=$('#authPassword').value;if(!email||!password){setAuthStatus('Escribe tu correo y contraseña.');return}setAuthStatus('Conectando…');let result;if(mode==='signup')result=await supabaseClient.auth.signUp({email,password,options:{emailRedirectTo:location.origin+location.pathname}});else result=await supabaseClient.auth.signInWithPassword({email,password});if(result.error){setAuthStatus(result.error.message);return}if(mode==='signup'&&!result.data.session){setAuthStatus('Cuenta creada. Revisa tu correo para confirmar la dirección y luego inicia sesión.');return}if(result.data.user)await activateUser(result.data.user)}
-async function activateUser(user){currentUser=user;const anonymous=JSON.parse(localStorage.getItem('nico-finanzas-v1')||'null');const userLocal=JSON.parse(localStorage.getItem('nico-finanzas-user-'+user.id)||'null');const {data:profile,error}=await supabaseClient.from('profiles').select('app_data').eq('id',user.id).single();if(error){setAuthStatus('No se pudo leer tu perfil: '+error.message);return}let cloud=profile?.app_data;if(cloud&&typeof cloud==='object'&&Array.isArray(cloud.transactions)){data=cloud;localStorage.setItem(localDataKey(),JSON.stringify(data));setAuthStatus('Datos descargados y sincronizados.')}else if(userLocal){data=userLocal;await syncToCloud();setAuthStatus('Datos locales de esta cuenta recuperados.')}else if(anonymous&&(anonymous.transactions?.length||anonymous.accounts?.length>1||anonymous.budgets?.length||anonymous.goals?.length||anonymous.debts?.length||anonymous.recurring?.length||anonymous.subscriptions?.length)){if(confirm('Encontramos datos guardados en este dispositivo. ¿Quieres copiarlos a tu nueva cuenta? Esto no borrará la copia local.')){data=anonymous;localStorage.setItem(localDataKey(),JSON.stringify(data));await syncToCloud();setAuthStatus('Datos locales importados a tu cuenta.')}else{data=defaultData();localStorage.setItem(localDataKey(),JSON.stringify(data));setAuthStatus('Cuenta conectada sin importar los datos locales.')}}else{data=defaultData();localStorage.setItem(localDataKey(),JSON.stringify(data));await syncToCloud();setAuthStatus('Cuenta conectada. Ya puedes comenzar.')}$('#authOpen').textContent=user.email;$('#authLogout').hidden=false;render()}
-async function initializeAuth(){if(!supabaseClient){$('#authOpen').textContent='Auth no disponible';return}$('#authOpen').onclick=openAuth;$('#authClose').onclick=()=>$('#authModal').classList.remove('show');$('#authModal').onclick=e=>{if(e.target.id==='authModal')$('#authModal').classList.remove('show')};$('#authForm').onsubmit=async e=>{e.preventDefault();await handleAuth(authMode)};$('#authSignup').onclick=()=>{authMode=authMode==='login'?'signup':'login';$('#authSubmit').textContent=authMode==='signup'?'Crear cuenta':'Iniciar sesión';$('#authSignup').textContent=authMode==='signup'?'Volver a iniciar sesión':'Crear cuenta';setAuthStatus(authMode==='signup'?'La confirmación de correo puede ser necesaria.':'');};$('#authSubmit').onclick=()=>{if(authMode==='login')return};$('#authReset').onclick=async()=>{const email=$('#authEmail').value.trim();if(!email){setAuthStatus('Escribe primero tu correo.');return}const {error}=await supabaseClient.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});setAuthStatus(error?error.message:'Te enviamos instrucciones si el correo está registrado.')};$('#authLogout').onclick=async()=>{await syncToCloud();await supabaseClient.auth.signOut();currentUser=null;try{data=JSON.parse(localStorage.getItem('nico-finanzas-v1'))||defaultData()}catch{data=defaultData()}$('#authOpen').textContent='Iniciar sesión';$('#authModal').classList.remove('show');render()};const {data:{session}}=await supabaseClient.auth.getSession();if(session?.user)await activateUser(session.user);supabaseClient.auth.onAuthStateChange(async(event,session)=>{if(event==='SIGNED_IN'&&session?.user&&!currentUser)await activateUser(session.user);if(event==='SIGNED_OUT'&&currentUser){currentUser=null}})}
+async function handleAuth(mode){
+  const email=$('#authEmail').value.trim(),password=$('#authPassword').value,name=$('#authName')?.value.trim()||'';
+  if(!email||!password){setAuthStatus('Escribe tu correo y contraseña.');return}
+  setAuthStatus('Conectando…');
+  let result;
+  if(mode==='signup')result=await supabaseClient.auth.signUp({email,password,options:{emailRedirectTo:location.origin+location.pathname,data:{display_name:name}}});
+  else result=await supabaseClient.auth.signInWithPassword({email,password});
+  if(result.error){setAuthStatus(result.error.message);return}
+  if(mode==='signup'&&!result.data.session){setAuthStatus('Cuenta creada. Revisa tu correo para confirmar la dirección y luego inicia sesión.');return}
+  if(result.data.user)await activateUser(result.data.user);
+}
+async function activateUser(user){
+  currentUser=user;
+  try{
+    const anonymous=JSON.parse(localStorage.getItem('nico-finanzas-v1')||'null');
+    const userLocal=JSON.parse(localStorage.getItem('nico-finanzas-user-'+user.id)||'null');
+    const {data:profile,error}=await supabaseClient.from('profiles').select('app_data').eq('id',user.id).single();
+    if(error)throw error;
+    const cloud=profile?.app_data;
+    if(cloud&&typeof cloud==='object'&&Array.isArray(cloud.transactions)){
+      data=cloud;localStorage.setItem(localDataKey(),JSON.stringify(data));setAuthStatus('Datos descargados desde tu cuenta.');
+    }else if(hasUsefulData(userLocal)){
+      data=userLocal;await syncToCloud();setAuthStatus('Datos locales de esta cuenta recuperados y enviados a la nube.');
+    }else if(hasUsefulData(anonymous)){
+      if(confirm('Encontramos datos guardados en este dispositivo. ¿Quieres copiarlos a tu nueva cuenta? Esto no borrará la copia local.')){
+        data=anonymous;localStorage.setItem(localDataKey(),JSON.stringify(data));await syncToCloud();
+      }else{
+        data=defaultData();localStorage.setItem(localDataKey(),JSON.stringify(data));await syncToCloud();
+      }
+    }else{
+      data=defaultData();localStorage.setItem(localDataKey(),JSON.stringify(data));await syncToCloud();
+    }
+    displayUser(user);$('#authLogout').hidden=false;applyTheme();render();
+  }catch(e){console.error('Error activando cuenta:',e);setAuthStatus('No se pudo cargar/sincronizar el perfil: '+(e.message||'Error desconocido'));displayUser(user);}
+}
+async function initializeAuth(){
+  if(!supabaseClient){$('#authOpen').textContent='Auth no disponible';return}
+  $('#authOpen').onclick=openAuth;
+  $('#authClose').onclick=()=>$('#authModal').classList.remove('show');
+  $('#authModal').onclick=e=>{if(e.target.id==='authModal')$('#authModal').classList.remove('show')};
+  $('#authForm').onsubmit=async e=>{e.preventDefault();await handleAuth(authMode)};
+  $('#authSignup').onclick=()=>{authMode=authMode==='login'?'signup':'login';$('#authSubmit').textContent=authMode==='signup'?'Crear cuenta':'Iniciar sesión';$('#authSignup').textContent=authMode==='signup'?'Volver a iniciar sesión':'Crear cuenta';$('#authNameField').hidden=authMode!=='signup';setAuthStatus(authMode==='signup'?'Puedes indicar tu nombre para mostrarlo en tu cuenta.':'');};
+  $('#authReset').onclick=async()=>{const email=$('#authEmail').value.trim();if(!email){setAuthStatus('Escribe primero tu correo.');return}const {error}=await supabaseClient.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});setAuthStatus(error?error.message:'Te enviamos instrucciones si el correo está registrado.')};
+  $('#authLogout').onclick=async()=>{await syncToCloud();const {error}=await supabaseClient.auth.signOut();if(error){setAuthStatus('No se pudo cerrar sesión: '+error.message);return}currentUser=null;try{data=JSON.parse(localStorage.getItem('nico-finanzas-v1'))||defaultData()}catch{data=defaultData()}$('#authOpen').textContent='Iniciar sesión';$('#authOpen').title='';$('#authModal').classList.remove('show');render()};
+  const {data:{session},error}=await supabaseClient.auth.getSession();if(error)throw error;if(session?.user)await activateUser(session.user);
+  supabaseClient.auth.onAuthStateChange(async(event,session)=>{if(event==='SIGNED_IN'&&session?.user&&!currentUser)await activateUser(session.user);if(event==='SIGNED_OUT'&&currentUser){currentUser=null;$('#authOpen').textContent='Iniciar sesión';}});
+}
 function toast(msg){const el=$('#toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2400)}
 function monthTx(){return data.transactions.filter(t=>monthKey(t.date)===monthKey())}
 function totals(){let tx=monthTx();return {income:tx.filter(t=>t.type==='income').reduce((a,t)=>a+t.amount,0),expense:tx.filter(t=>t.type==='expense').reduce((a,t)=>a+t.amount,0)}}
