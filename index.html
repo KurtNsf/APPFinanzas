@@ -11,13 +11,13 @@
   <style>
     :root{--bg:#f4f6fa;--surface:#fff;--surface2:#eef2f7;--text:#172033;--muted:#68758a;--line:#e3e8f0;--accent:#6558e8;--accent2:#5145d4;--green:#159b70;--red:#d84e61;--amber:#c48625;--shadow:0 12px 34px rgba(27,39,68,.07)}
     [data-theme="dark"]{--bg:#0c1220;--surface:#151e2e;--surface2:#202b3e;--text:#edf2fa;--muted:#9eacc0;--line:#2b374b;--accent:#948aff;--accent2:#7669f0;--green:#50d5a4;--red:#ff7b8b;--amber:#f2bd61;--shadow:0 12px 34px rgba(0,0,0,.2)}
-    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding-bottom:92px}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding-bottom:92px}
     button,input,select,textarea{font:inherit}button{cursor:pointer}
     .app{max-width:1180px;margin:auto;padding:20px 22px;position:relative}.app:before{content:"";position:fixed;z-index:-1;inset:0;background:radial-gradient(ellipse at 8% 4%,rgba(117,102,245,.14),transparent 34%),radial-gradient(ellipse at 92% 28%,rgba(41,174,155,.10),transparent 30%),linear-gradient(145deg,var(--bg),color-mix(in srgb,var(--bg) 88%,var(--accent) 12%));pointer-events:none}
     header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:24px}
     .brand{display:flex;align-items:center;gap:12px}.logo{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#786cf3,#4e45c7);display:grid;place-items:center;color:white;font-weight:800;font-size:21px;box-shadow:0 8px 20px #6558e844}
     h1{font-size:21px;margin:0;letter-spacing:-.5px}.sub{font-size:12px;color:var(--muted)}
-    .header-actions{display:flex;gap:8px;align-items:center}.auth-btn{font-size:13px}.auth-modal{position:fixed;inset:0;background:#10182799;display:none;align-items:center;justify-content:center;padding:18px;z-index:100}.auth-modal.show{display:flex}.auth-box{width:min(440px,100%);background:var(--surface);color:var(--text);border:1px solid var(--line);border-radius:20px;padding:22px;box-shadow:var(--shadow)}.auth-box h2{margin:0 0 6px}.auth-box .field{margin:13px 0}.auth-actions{display:flex;gap:8px;flex-wrap:wrap}.auth-status{font-size:12px;color:var(--muted);margin-top:10px;min-height:18px}.icon-btn,.ghost{border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:12px;padding:10px 12px}
+    .header-actions{display:flex;gap:8px;align-items:center}.auth-btn{font-size:13px}.sync-indicator{display:inline-flex;align-items:center;gap:7px;padding:8px 10px;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:11px;white-space:nowrap}.sync-indicator:before{content:"";width:7px;height:7px;border-radius:50%;background:#a0a0a8}.sync-indicator[data-state="ok"]:before{background:var(--green)}.sync-indicator[data-state="pending"]:before{background:var(--amber)}.sync-indicator[data-state="offline"]:before,.sync-indicator[data-state="error"]:before{background:var(--red)}.auth-modal{position:fixed;inset:0;background:#10182799;display:none;align-items:center;justify-content:center;padding:18px;z-index:100}.auth-modal.show{display:flex}.auth-box{width:min(440px,100%);background:var(--surface);color:var(--text);border:1px solid var(--line);border-radius:20px;padding:22px;box-shadow:var(--shadow)}.auth-box h2{margin:0 0 6px}.auth-box .field{margin:13px 0}.auth-actions{display:flex;gap:8px;flex-wrap:wrap}.auth-status{font-size:12px;color:var(--muted);margin-top:10px;min-height:18px}.icon-btn,.ghost{border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:12px;padding:10px 12px}
     .primary{border:0;background:var(--accent);color:white;border-radius:12px;padding:11px 16px;font-weight:650}.primary:hover{background:var(--accent2)}
     .welcome{display:flex;justify-content:space-between;align-items:end;gap:12px;margin:18px 0}.welcome h2{font-size:25px;margin:0 0 4px;letter-spacing:-.7px}.muted{color:var(--muted)}
     .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}.card{background:linear-gradient(145deg,color-mix(in srgb,var(--surface) 96%,white 4%),var(--surface));border:1px solid color-mix(in srgb,var(--line) 78%,var(--accent) 22%);border-radius:21px;padding:19px;box-shadow:var(--shadow),inset 0 1px 0 rgba(255,255,255,.32);min-width:0;transition:transform .2s,box-shadow .2s}.card:hover{box-shadow:0 16px 38px rgba(27,39,68,.11)}
@@ -62,16 +62,30 @@
     .category-donut:after{content:"";position:absolute;inset:19px;border-radius:50%;background:var(--surface)}.donut-center{z-index:1;text-align:center;display:flex;flex-direction:column;gap:2px}.donut-center strong{font-size:15px}.donut-center span{font-size:10px;color:var(--muted)}
     .category-legend{display:grid;gap:9px;min-width:0;flex:1}.category-legend-row{display:grid;grid-template-columns:9px minmax(0,1fr) auto;align-items:center;gap:8px;font-size:11px}.category-dot{width:8px;height:8px;border-radius:50%}.category-legend-row span:nth-child(2){overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)}.category-legend-row b{font-size:11px}
     @media(max-width:560px){.app{padding:13px 12px}.card{padding:16px;border-radius:20px}.welcome{margin:15px 0}.welcome h2{font-size:21px}.category-overview{gap:12px}.category-donut{width:112px;height:112px;flex-basis:112px}.category-donut:after{inset:16px}.category-legend{gap:7px}.header-actions{gap:6px}.auth-btn{max-width:118px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.header-actions .primary{font-size:12px;padding:10px 11px}}
+    /* Pulido 2.3: accesibilidad, estados y adaptación móvil */
+    .skip-link{position:absolute;left:12px;top:-60px;z-index:200;background:var(--surface);color:var(--text);padding:10px 14px;border-radius:10px;border:2px solid var(--accent)}.skip-link:focus{top:10px}
+    :focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 72%,white);outline-offset:3px}
+    button:disabled{opacity:.48;cursor:not-allowed;transform:none}
+    .nav-btn[aria-current="page"]{color:#fff;background:var(--accent)}
+    .modal-open{overflow:hidden}
+    .modal-box{overscroll-behavior:contain}
+    .sync-indicator{max-width:150px;overflow:hidden;text-overflow:ellipsis}
+    .movement .move-title{max-width:min(52vw,420px)}
+    .empty{line-height:1.6}
+    @media(max-width:760px){.sync-indicator{display:none}.bottom-nav{padding-bottom:calc(9px + env(safe-area-inset-bottom))}.app{padding-bottom:calc(24px + env(safe-area-inset-bottom))}}
+    @media(max-width:420px){.header-actions .auth-btn{max-width:92px}.header-actions .icon-btn{padding:9px}.header-actions .primary{font-size:11px;padding:9px}.nav-btn{padding:5px 8px}.nav-btn span{font-size:18px}.nav-btn{font-size:9px}}
+    @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
   </style>
 </head>
 <body>
+<a class="skip-link" href="#mainContent">Saltar al contenido</a>
 <div class="app">
   <header>
     <div class="brand"><div class="logo">F</div><div><h1>Finanzas</h1><div class="sub">Tu dinero, más claro.</div></div></div>
-    <div class="header-actions"><button class="ghost auth-btn" id="authOpen">Iniciar sesión</button><button class="icon-btn" id="themeBtn" aria-label="Cambiar tema">☼</button><button class="ghost export-head" id="exportBtn">↓ Exportar</button><button class="primary" id="quickAdd">+ Movimiento</button></div>
+    <div class="header-actions"><span class="sync-indicator" id="syncIndicator" data-state="local" role="status" aria-live="polite">Solo en este dispositivo</span><button class="ghost auth-btn" id="authOpen">Iniciar sesión</button><button class="icon-btn" id="themeBtn" type="button" aria-label="Cambiar tema" title="Cambiar tema">☼</button><button class="ghost export-head" id="exportBtn">↓ Exportar</button><button class="primary" id="quickAdd">+ Movimiento</button></div>
   </header>
-  <nav class="bottom-nav"><div class="nav-inner">
-    <button class="nav-btn active" data-page="home"><span>⌂</span>Inicio</button>
+  <nav class="bottom-nav" aria-label="Navegación principal"><div class="nav-inner">
+    <button class="nav-btn active" data-page="home" aria-current="page"><span>⌂</span>Inicio</button>
     <button class="nav-btn" data-page="transactions"><span>⇄</span>Movimientos</button>
     <button class="nav-btn" data-page="budgets"><span>▤</span>Presupuestos</button>
     <button class="nav-btn" data-page="savings"><span>◎</span>Ahorros</button>
@@ -79,7 +93,7 @@
     <button class="nav-btn" data-page="more"><span>⋯</span>Más</button>
   </div></nav>
 
-  <main>
+  <main id="mainContent" tabindex="-1">
     <section class="page active" id="page-home">
       <div class="welcome"><div><h2>Hola, vamos con tus finanzas</h2><div class="muted" id="todayLabel"></div></div><span class="pill">COP · Colombia</span></div>
       <div class="grid">
@@ -96,7 +110,7 @@
 
     <section class="page" id="page-transactions">
       <div class="page-title"><h2>Movimientos</h2><p>Todo lo que entra y sale de tu dinero.</p></div>
-      <div class="toolbar"><input id="searchTx" placeholder="Buscar movimiento…"><select id="filterType"><option value="all">Todos</option><option value="income">Ingresos</option><option value="expense">Egresos</option><option value="transfer">Transferencias</option></select><button class="primary" id="addTx">+ Registrar</button></div>
+      <div class="toolbar"><input id="searchTx" type="search" aria-label="Buscar movimientos por descripción, categoría, nota o cuenta" placeholder="Buscar movimiento…"><select id="filterType" aria-label="Filtrar movimientos por tipo"><option value="all">Todos</option><option value="income">Ingresos</option><option value="expense">Egresos</option><option value="transfer">Transferencias</option></select><button class="primary" id="addTx">+ Registrar</button></div>
       <div class="card"><div id="transactionList"></div></div>
     </section>
 
@@ -135,7 +149,7 @@
   </main>
 </div>
 
-<div class="modal" id="modal"><div class="modal-box"><div class="modal-head"><h3 id="modalTitle">Nuevo registro</h3><button class="close" id="closeModal">✕</button></div><form id="modalForm"></form></div></div>
+<div class="modal" id="modal"><div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-head"><h3 id="modalTitle">Nuevo registro</h3><button class="close" id="closeModal">✕</button></div><form id="modalForm"></form></div></div>
 <div class="toast" id="toast"></div>
 <div class="auth-modal" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authTitle"><div class="auth-box"><div class="section-head"><div><h2 id="authTitle">Tu cuenta de Finanzas</h2><div class="sub" id="authSubtitle">Sincroniza tus datos entre dispositivos.</div></div><button class="close" id="authClose" type="button">✕</button></div><form id="authForm"><div class="field" id="authNameField" hidden><label>Nombre (opcional)</label><input id="authName" type="text" autocomplete="name" placeholder="¿Cómo quieres que te llamemos?"></div><div class="field"><label>Correo electrónico</label><input id="authEmail" type="email" autocomplete="email" required placeholder="tu@correo.com"></div><div class="field"><label>Contraseña</label><input id="authPassword" type="password" autocomplete="current-password" minlength="6" required placeholder="Mínimo 6 caracteres"></div><div class="auth-actions"><button class="primary" id="authSubmit" type="submit">Iniciar sesión</button><button class="ghost" id="authSignup" type="button">Crear cuenta</button></div></form><div class="auth-actions" style="margin-top:10px"><button class="ghost" id="authReset" type="button">Olvidé mi contraseña</button><button class="ghost" id="authLogout" type="button" hidden>Cerrar sesión</button></div><div class="auth-status" id="authStatus" aria-live="polite"></div><p class="sub">Tus datos se sincronizan con tu cuenta privada. No compartas tu contraseña.</p></div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

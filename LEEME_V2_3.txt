@@ -1,0 +1,50 @@
+FINANZAS 2.3.0 — PULIDO DE EXPERIENCIA
+=====================================
+
+Esta versión parte de Finanzas 2.2.0 y conserva el diseño grafito/coral,
+autenticación Supabase, seguridad multiusuario, sincronización incremental,
+respaldos e historial local.
+
+CAMBIOS
+- Indicador de estado de conexión/sincronización en el encabezado de escritorio.
+- Mensajes diferenciados para sincronizado, sincronizando, sin conexión y errores.
+- Fechas locales para Colombia y otros husos horarios: evita desfases de un día
+  causados por convertir la fecha local a UTC.
+- Lista de movimientos ordenada por fecha descendente.
+- Búsqueda de movimientos por descripción, categoría, nota y cuenta.
+- Mejor mensaje cuando los filtros no encuentran resultados.
+- Mejoras de accesibilidad: enlace para saltar al contenido, etiquetas ARIA,
+  estado de navegación, foco visible, cierre de diálogos con Escape y retorno
+  del foco al cerrar.
+- Ajustes de navegación móvil, áreas seguras y respeto a reducir movimiento.
+- Caché PWA actualizada para que los dispositivos reciban la nueva versión.
+
+BASE DE DATOS
+- No requiere SQL nuevo.
+- No agrega ni elimina tablas.
+- No cambia las políticas RLS ni las funciones RPC.
+- No modifica los registros almacenados en Supabase.
+
+INSTALACIÓN
+1. Conserva un respaldo JSON por precaución.
+2. Descomprime el ZIP.
+3. Sube el contenido de la carpeta finanzas directamente a la raíz del
+   repositorio APPFinanzas, reemplazando los archivos anteriores.
+4. Espera a que GitHub Pages publique.
+5. En escritorio, fuerza la actualización con Ctrl+Shift+R.
+6. En móvil, cierra completamente la PWA y vuelve a abrirla.
+
+PRUEBAS RECOMENDADAS
+- Iniciar sesión y comprobar el indicador de sincronización.
+- Crear, editar y eliminar un movimiento de prueba.
+- Buscar por descripción, nota y cuenta.
+- Revisar fechas cerca de medianoche para confirmar que no cambian de día.
+- Cambiar de sección con la navegación.
+- Abrir y cerrar un formulario con Escape.
+- Exportar una copia JSON y abrir un archivo histórico.
+- Probar en pantalla móvil y escritorio.
+
+NOTA
+El indicador de estado refleja conectividad y respuestas de sincronización de
+la aplicación; no sustituye una comprobación de los datos en Supabase cuando
+se realicen pruebas importantes.

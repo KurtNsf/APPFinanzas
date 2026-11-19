@@ -1,7 +1,7 @@
 {
   "name": "Finanzas",
   "short_name": "Finanzas",
-  "description": "Controla ingresos, gastos, suscripciones, ahorros y presupuestos.",
+  "description": "Administra tus finanzas personales con una interfaz clara y segura.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
