@@ -1,0 +1,34 @@
+FINANZAS 2.2.0 — REDISEÑO VISUAL
+================================
+
+Esta versión conserva las funciones de Finanzas 2.0.0 (autenticación,
+sincronización incremental, seguridad multiusuario, respaldos e historial)
+y aplica un rediseño visual inspirado en la referencia compartida por el usuario.
+
+CAMBIOS VISUALES
+- Paleta gris grafito y carbón en modo oscuro.
+- Modo claro en blanco/gris suave.
+- Acentos coral/rosa y tonos cálidos para gráficos.
+- Tarjetas más limpias, redondeadas y con sombras discretas.
+- Gráfico de gastos por categoría tipo dona con leyenda.
+- Ajustes de navegación y espacios para móvil y escritorio.
+- El tema oscuro queda como predeterminado para cuentas nuevas; los usuarios
+  existentes conservan su preferencia de tema.
+
+NOTIFICACIONES
+No se incorpora sistema de notificaciones. Se omite esa etapa según la decisión
+ del usuario.
+
+INSTALACIÓN
+1. Conserva un respaldo JSON antes de actualizar.
+2. Si todavía no instalaste Finanzas 2.0.0, ejecuta primero el SQL
+   SYNC_INCREMENTAL_V2_0.sql desde Supabase SQL Editor.
+3. Si ya tienes 2.0.0 funcionando, NO vuelvas a ejecutar el SQL.
+4. Sube el contenido de esta carpeta directamente a la raíz del repositorio
+   APPFinanzas, reemplazando los archivos anteriores.
+5. Espera la publicación de GitHub Pages y fuerza la actualización con
+   Ctrl+Shift+R.
+6. En móvil, cierra y vuelve a abrir la PWA para que tome el nuevo caché.
+
+No se añaden tablas ni cambios de esquema SQL en esta versión.
+No elimina datos ni cambia las políticas RLS.
