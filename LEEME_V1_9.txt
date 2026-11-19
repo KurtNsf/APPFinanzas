@@ -1,0 +1,27 @@
+FINANZAS 1.9.0 — MEJORAS FINANCIERAS
+
+BASE
+Esta versión parte de Finanzas 1.8.0. Conserva Supabase Auth, RLS, tablas individuales y sincronización incremental de la versión 1.7.1. No requiere ejecutar SQL nuevo.
+
+CAMBIOS
+- El campo Nota de los movimientos ahora es realmente opcional. Se puede guardar un ingreso, egreso o transferencia sin escribir una nota.
+- La edición de movimientos conserva la nota existente y permite dejarla vacía.
+- El formulario de cuentas aclara que el saldo es un saldo de referencia actual: los movimientos lo ajustan automáticamente y el usuario puede establecer una nueva referencia editando la cuenta.
+- Nuevo informe financiero mensual seleccionable: ingresos, egresos, balance neto, número de movimientos y principales categorías de gasto.
+- Se actualiza la caché de la PWA a v1.9.0.
+
+PUBLICACIÓN
+1. No se requiere ejecutar SQL en Supabase.
+2. Descomprime el ZIP.
+3. Sube el contenido de la carpeta finanzas a la raíz del repositorio APPFinanzas, reemplazando los archivos.
+4. Haz Commit changes y espera GitHub Pages.
+5. Abre la aplicación y fuerza recarga con Ctrl + Shift + R.
+
+PRUEBAS
+- Crear un movimiento sin nota y confirmar que se guarda.
+- Crear otro con nota y confirmar que se conserva.
+- Editar un movimiento y borrar su nota.
+- Abrir Más > Informe financiero, cambiar el mes y comprobar los totales.
+- Editar el saldo de referencia de una cuenta y verificar que los movimientos posteriores lo ajusten.
+
+No borra datos ni modifica el esquema de Supabase.
