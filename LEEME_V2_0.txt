@@ -1,0 +1,37 @@
+FINANZAS 2.0.0 — RESPALDOS Y ARCHIVO HISTÓRICO
+
+BASE
+Parte de Finanzas 1.9.0. Conserva Supabase Auth, políticas RLS y sincronización incremental 1.7.1. Requiere ejecutar el archivo SYNC_INCREMENTAL_V2_0.sql una vez en Supabase. Añade una columna técnica balance_applied a transactions para conservar correctamente el efecto de movimientos restaurados sobre los saldos de referencia. No crea tablas nuevas ni elimina registros.
+
+NOVEDADES
+- Copia JSON completa de los datos activos.
+- Libro Excel compatible (.xls SpreadsheetML) con hojas de movimientos, cuentas, presupuestos, ahorros, deudas, gastos recurrentes y suscripciones.
+- Archivo manual de movimientos anteriores a una fecha elegida.
+- Antes de retirar movimientos activos, descarga JSON histórico y Excel; la aplicación pide confirmar que ambos se descargaron. Si cancelas, no archiva nada.
+- Al archivar, el saldo de referencia de las cuentas no se modifica.
+- Historial independiente: se abre un archivo JSON histórico desde el dispositivo y se consulta sin restaurarlo.
+- Restauración de movimientos seleccionados desde un archivo histórico, evitando IDs duplicados y sin volver a sumar movimientos al saldo de referencia.
+- El archivo histórico permanece en el dispositivo del usuario; no se carga a Supabase.
+- Si falla la sincronización al retirar los movimientos activos, la aplicación los repone localmente y muestra un error.
+
+IMPORTANTE SOBRE ARCHIVOS
+El formato Excel es .xls XML Spreadsheet (compatible con Excel y LibreOffice), no .xlsx. El JSON es el formato recomendado para restaurar. El navegador no puede comprobar de forma fiable que el usuario haya conservado los archivos; por eso solicita confirmación antes de archivar. Guarda ambos archivos en una carpeta segura de tu dispositivo, iCloud Drive o Archivos.
+
+PUBLICACIÓN
+1. Antes de publicar, abrir SYNC_INCREMENTAL_V2_0.sql y ejecutarlo una sola vez en Supabase > SQL Editor. Debe terminar en Success.
+2. Descomprimir el ZIP.
+3. Subir el contenido de la carpeta finanzas directamente a la raíz de APPFinanzas, reemplazando archivos.
+4. Hacer Commit changes y esperar GitHub Pages.
+5. Abrir la app y forzar recarga (Ctrl+Shift+R).
+
+PRUEBAS RECOMENDADAS
+1. Descargar copia JSON y libro Excel; abrir el .xls en Excel/LibreOffice.
+2. Elegir una fecha de corte que incluya solo un movimiento de prueba.
+3. Descargar ambos archivos y confirmar el archivado.
+4. Comprobar que el movimiento ya no aparece en la lista activa y que el saldo de la cuenta no cambió.
+5. Abrir el JSON desde Historial de archivos y consultar el movimiento.
+6. Restaurar el movimiento; comprobar que vuelve a la lista activa sin duplicarse ni alterar el saldo.
+7. Cerrar sesión e iniciar sesión y comprobar la sincronización.
+
+PRECAUCIÓN
+Prueba primero con movimientos no esenciales o crea un movimiento de prueba. No borres manualmente registros de Supabase. Los archivos históricos son locales y el usuario es responsable de conservarlos. La copia JSON general restaura el conjunto activo completo y no debe importarse sobre otra cuenta sin verificar el propietario.
